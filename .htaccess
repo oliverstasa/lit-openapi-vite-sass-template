@@ -1,0 +1,15 @@
+# Enable mod_rewrite
+RewriteEngine On
+
+# Ensure that accessing the root (/) loads /dist/index.html instead of root /index.html
+## RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\s/[\s?] [NC]
+## RewriteRule ^$ /dist/index.html [L]
+
+# Override default directory index files
+## DirectoryIndex dist/index.html
+
+
+# Optional: Prevent direct access to root index.html if needed
+<Files "index.html">
+    ## RedirectMatch 403 ^/index\.html$
+</Files>
