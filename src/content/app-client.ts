@@ -1,4 +1,4 @@
-import { LitElement, html, nothing, unsafeCSS } from "lit-element";
+import { LitElement, html, PropertyValues, nothing, unsafeCSS } from "lit-element";
 import { customElement, property, state } from "lit/decorators.js";
 import { ref, createRef, Ref } from 'lit/directives/ref.js';
 import { classMap } from "lit/directives/class-map.js";
@@ -36,6 +36,13 @@ export class AppClient extends LitElement {
         window.addEventListener('api:start', this._handleLoadingStart as EventListener);
         window.addEventListener('api:end', this._handleLoadingEnd as EventListener);
         window.addEventListener('api:error', this._handleApiError as EventListener);
+    }
+    
+    protected async updated(_changedProperties: PropertyValues): Promise<void> {
+        if (this.api === undefined) {
+            await this._handleInitAPI();
+            return;
+        }
     }
 
     private _handleLoadingStart = (ev: CustomEvent) => {
