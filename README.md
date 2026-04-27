@@ -1,4 +1,4 @@
-vite — lit — sass — openapi-fetch — i18n
+vite — lit — sass — swagger / openapi-fetch — i18n
 
 web-app core ready to build upon
 
