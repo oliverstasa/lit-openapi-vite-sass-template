@@ -33,9 +33,19 @@ export class AppClient extends LitElement {
 
         window.addEventListener('popstate', this._handlePopState);
 
-        window.addEventListener('api:start', this._handleLoadingStart as EventListener);
-        window.addEventListener('api:end', this._handleLoadingEnd as EventListener);
+        window.addEventListener('api:start', this._handleApiStart as EventListener);
+        window.addEventListener('api:end', this._handleApiEnd as EventListener);
         window.addEventListener('api:error', this._handleApiError as EventListener);
+        window.addEventListener('api:languageChanged', () => this.requestUpdate());
+    }
+    
+    disconnectedCallback() {
+        super.disconnectedCallback();
+        window.removeEventListener('popstate', this._handlePopState);
+        window.removeEventListener('api:start', this._handleApiStart as EventListener);
+        window.removeEventListener('api:end', this._handleApiEnd as EventListener);
+        window.removeEventListener('api:error', this._handleApiError as EventListener);
+        window.removeEventListener('api:languageChanged', () => this.requestUpdate());
     }
     
     protected async updated(_changedProperties: PropertyValues): Promise<void> {
@@ -45,11 +55,11 @@ export class AppClient extends LitElement {
         }
     }
 
-    private _handleLoadingStart = (ev: CustomEvent) => {
+    private _handleApiStart = (ev: CustomEvent) => {
         this.loading = true;
     }
 
-    private _handleLoadingEnd = (ev: CustomEvent) => {
+    private _handleApiEnd = (ev: CustomEvent) => {
         this.loading = false;
     }
 
@@ -83,14 +93,17 @@ export class AppClient extends LitElement {
 
         return url.pathname + url.search;
     }
-
+    
     private _handleInitAPI = async (): Promise<void> => {
         if (this.api) {
             return;
         }
-        return new Promise(async () => {
+        return new Promise(async (resolve) => {
             const api = new API();
+            await api.langPromise;
+
             this.api = api;
+            resolve();
         });
     }
 
