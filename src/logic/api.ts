@@ -1,47 +1,59 @@
 import createClient from "openapi-fetch";
 import type { Client } from "openapi-fetch";
-import type { paths as PathsPublic } from './schema-public.d.ts';
+import type { paths as PathsPublic } from './schema.d.ts';
 
 import i18next, { i18n } from 'i18next';
 import en from '../../i18n/en.json';
 import cs from '../../i18n/cs.json';
 const resources = {
-    en: en,
-    cs: cs
+    en: { translation: en }, // must be packed in translation, or have to define NS
+    cs: { translation: cs }
 };
 
 export class API {
-    private host: string = 'https://www.czechdigitalart.cz';
+    private host: string = 'localhost:3000/api';
     public clientPublic: Client<PathsPublic>;
     public lang: 'cs' | 'en' = 'cs';
 
     public i18n: i18n;
+    public langPromise: Promise<void>;
 
-    public readonly publicUrl = this.host + '/api';
     public token: string | undefined;
 
     constructor() {
+        // setup lang
+        const savedLang = window.localStorage.getItem('app_lang') as 'cs' | 'en' | null;
+
+        if (savedLang) {
+            this.lang = savedLang;
+        } else {
+            const browserLang = navigator.language || (navigator as any).userLanguage || '';
+            this.lang = browserLang.toLowerCase().startsWith('cs') ? 'cs' : 'en';
+        }
+
         // setup translator
         this.i18n = i18next.createInstance();
-        this.i18n.init({
+        this.langPromise = this.i18n.init({
             resources,
             lng: this.lang,
             fallbackLng: 'en',
-            interpolation: { escapeValue: false },
-            ns: ['common', 'menu'],
-            defaultNS: 'common',
+            interpolation: { escapeValue: false }
         })
             .then(() => {
                 this.lang = this.i18n.language as 'cs' | 'en';
+                document.documentElement.setAttribute('lang', this.lang);
 
                 this.i18n.on('languageChanged', (lng) => {
                     this.lang = lng as 'cs' | 'en';
+                    document.documentElement.setAttribute('lang', this.lang);
+                    window.localStorage.setItem('app_lang', this.lang);
+                    window.dispatchEvent(new CustomEvent('api:languageChanged', { detail: { lang: this.lang } }));
                 });
             });
 
         // setup client
         const client: Client<any> = createClient({
-            baseUrl: this.publicUrl
+            baseUrl: this.host
         });
 
         client.use({
